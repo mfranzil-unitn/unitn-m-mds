@@ -1,0 +1,164 @@
+\documentclass[a4paper,11pt,hidelinks]{article}
+%\usepackage[a-1b]{pdfx}
+\usepackage{hyperref}
+
+\usepackage{subfiles}
+\usepackage{epsfig}
+\usepackage{plain}
+\usepackage{setspace}
+\usepackage{relsize,exscale}
+%\usepackage{minted}
+\usepackage{mdframed}
+\usepackage{caption}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{mathabx}
+\usepackage{tcolorbox}
+\usepackage{multicol}
+\usepackage[english]{babel}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=1.8cm]{geometry}
+\usepackage{titlesec} 
+\usepackage[utf8x]{inputenc} 
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}{Lemma}[theorem]
+
+\hypersetup{colorlinks=true, urlcolor=blue}
+
+\captionsetup{
+ justification=centering,
+ singlelinecheck=false,
+ font=small,labelfont=bf,labelsep=space}
+
+\begin{document}
+
+\pagestyle{plain}
+
+\begingroup
+
+\renewcommand{\cleardoublepage}{}
+\renewcommand{\clearpage}{}
+\newcommand{\mathlargeer}[1]{\mathlarger{\mathlarger{#1}}}
+
+\titleformat{\section}
+{\normalfont\Large\bfseries}{\thesection}{1em}{}
+
+\newpage
+
+\title{Notes on Detection - AWGN Case}
+\author{Multimedia Data Security \\
+    (original author: Giulia Boato \texttt{<giulia.boato@unitn.it>}) \\
+    Matteo Franzil \texttt{<matteo.franzil+github@gmail.com>}
+}
+\maketitle
+
+\begin{align}
+    H_0: & \: (a_0) \quad f'_i =  x_i = f_i + n_i                        \\
+         & \: (b_0) \quad f'_i =  x_i + \gamma v_i (v \ne w)             \\
+    H_1: & \quad\quad f'_i =   x_i + \gamma w_i = f_i + \gamma w_i + n_i
+\end{align}
+
+We can make $a_0, b_0$ coincide if $v = null$. Our likelihood ratio is the following:
+
+\begin{align}
+    l(f') & = \frac{p(f'|w)}{\mathlarger{\int_{\mathbb{R}^n}} p(f'|v)p(v)\,dv} \text{  } \quad \quad (v \ne w)                                                                                                                                                                    \\
+    \:    & =\frac{\mathlargeer{\prod_{i = 1}^n} \frac{1}{\sqrt{2 \pi \sigma_x^2}} e^\frac{(-f'_i -\mu_x - \gamma w_i)^2}{2 \sigma_x^2}}{\mathlargeer{\prod_{i = 1}^n} \mathlarger{\int_{\mathbb{R}^n}} \frac{1}{\sqrt{2 \pi \sigma_x^2}} e^\frac{(-f'_i -\mu_x - \gamma w_i)^2}{2 \sigma_x^2} p(v_i) \,dv_i}
+\end{align}
+
+We can set $\gamma w_i$ to 0 since its so much smaller than $2 \sigma_x^2$. We can just therefore take into consideration case $a_0$.
+
+\begin{align}
+     & = \frac{\mathlargeer{\prod_{i = 1}^n} \frac{1}{\sqrt{2 \pi \sigma_x^2}} e^\frac{(-f'_i -\mu_x - \gamma w_i)^2}{2 \sigma_x^2}}{\mathlargeer{\prod_{i = 1}^n} \frac{1}{\sqrt{2 \pi \sigma_x^2}} e^\frac{(-f'_i -\mu_x)^2}{2 \sigma_x^2}} \\
+     & =\frac{\mathlargeer{\prod_{i = 1}^n} e^\frac{(-f'_i -\mu_x - \gamma w_i)^2}{2 \sigma_x^2}}{\mathlargeer{\prod_{i = 1}^n} e^\frac{(-f'_i -\mu_x)^2}{2 \sigma_x^2}}
+\end{align}
+
+We can transform to the logarithmic domain, which allows us to convert products into sums.
+
+\begin{align}
+    & = \mathlargeer{\sum} \frac{1}{2 \sigma_x^2} \Bigg[ (f'_i - \mu_x )^2 - (f'_i - \mu_x - \gamma w_i)^2 \Bigg] \\
+    & = \frac{1}{2 \sigma_x^2} \Bigg[ \mathlargeer{\sum} 2 \gamma f'_i w_i - \mathlargeer{\sum} 2 \mu_x \gamma w_i - \sum \gamma^2 w_i^2 \Bigg]
+\end{align}
+
+Finally, we can simplify some terms - indeed, the ones without features are not interesting and can be dropped out:
+
+\begin{align}
+    & = \frac{1}{2 \sigma_x^2} \Bigg[ \mathlargeer{\sum} 2 \gamma f'_i w_i \Bigg] \\
+    & \Leftrightarrow \rho = \frac{1}{n} \mathlargeer{\sum} f'_i w_i = \frac{f' w}{n}
+\end{align}
+
+In order to decide whether a mark is present or not in a photo, the detector needs only to look at the correlation between the to-be-searched watermark and the host feature vector extractor from $A'$, and compare it against a detection threshold $T_p$:
+
+\begin{align}
+    \mathlarger{\int_{T}^{\infty}} p(\rho|H_0) \,d\rho = \overline{\rho_f} 
+\end{align}
+
+Here, we applied the Neyman-Pearson criterion in order to get the target value $\overline{P_f}$. Indeed, here $\rho$ is a solid projection of $f'$ over $w$. 
+
+When computing the false detection probability for setting the threshold at the detector, the watermark signal is known. Thus we have to average over all possible host assets. When evaluation the performance of the whole watermarking systems, we also have to average over all possible watermarks.
+
+Watermark samples are zero-mean i.i.d. random variables. Our distribution of $\rho$, no matter if the features are watermarked or not - i.e., both for attack noise and host features - are both gaussian. The means and variances will change, though, and this is what we're going to estimate:
+
+\begin{align}
+    p(\rho|H_0) \tilde (\mu_{\rho|H_0}, \sigma^2_{\rho|H_0}) \\
+    p(\rho|H_1) \tilde (\mu_{\rho|H_1}, \sigma^2_{\rho|H_1})
+\end{align}
+
+Our threshold is therefore set in the median point between the two gaussians. on the other hand, if the false alarm rate has to be fixed, so we can just $\int_{T}^{+\infty} p(\rho|H_0) \,dx = 10^{-2} $ (be sure that is $H_0$!!!)
+
+Now let's assume our threshold is really what we wanted. Let's calculate the misdetection rate: it's just the other tail:
+
+\begin{align}
+    \int_{-\infty}^{T} p(\rho|H_1) \,dx = k, \quad\quad\quad k = 10^{-2} 
+\end{align}
+
+This is the one that Bayes would have set to $1 - P_d$.
+
+Assume we're not in a bayesian case instead (so the threshold is not the mean). if we have a fixed alarm rate but the misdetection rate is too high, we can fix it by increasing the mean of the $H_1$ distribution, moving it to the right.
+
+\begin{align}
+    \mu_{\rho|H_0} = E[\rho|H_0] \xrightarrow{f'_i = x_i} \frac{1}{n} E[\sum x_i w_i] = \frac{1}{n} \sum E[x_i] w_i = \mu_x \sum \frac{w_i}{n} = 0
+\end{align}
+
+The average of w is 0, so the mean is 0. this allows us to fix $\rho|H_0$ on 0. We can now change the variance:
+
+\begin{align}
+    \sigma^2_{\rho|H_0} = var(\frac{1}{n} \sum x_i w_i) = \frac{1}{n^2} \sigma_x^2 \sum w_i^2 = \frac{\sigma_x^2 \sigma_w^2}{n}
+\end{align}
+
+Where the last step can be done if we assume that $n \gg $
+
+\begin{align}
+    \frac{1}{n} \sum w_i^2 = \frac{\left\lVert w \right\rVert^2}{n} \approx E[w^2] = \sigma^2_w
+\end{align}
+
+Shifting to the right means:
+
+\begin{align}
+    \mu_{rho|H_1} = \gamma \sigma_w^2
+\end{align}
+
+and therefore moving to a $\gamma' > \gamma$: the stronger the watermark, the less misdetection (but it will be more visible), or we can just select a different watermark with a different $\sigma^2$. On the other hand, to get the variance:
+
+\begin{align}
+    \sigma^2_{\rho|H_0} = \frac{1}{n} \sigma_x^2 \sigma_w^2
+\end{align}
+
+By also playing with the variance we can tamper the impact (longer watermark means less variance and thinner gaussian)
+
+In the end, what we do need for the detector performance is:
+
+\begin{align}
+    \overline{P_f} & = \frac{1}{2} \:\text{erfc}\Bigg{(}\sqrt{\frac{(T - \mu_{\rho|H_0})^2}{2 \sigma^2_{\rho|H_0}}}\bigg{)} = \frac{1}{2} \:\text{erfc}\Bigg{(}\sqrt{\frac{T^2}{2 \sigma^2_{\rho|H_0}}}\bigg{)} \\
+    1 - P_d & = \frac{1}{2} \:\text{erfc}\Bigg{(}\sqrt{\frac{(\mu_{\rho|H_1} - T)^2}{2 \sigma^2_{\rho|H_1}}}\bigg{)}
+\end{align}
+\[
+    \pushQED{\qed}
+    \qedhere
+    \popQED
+\]
+\endgroup
+\end{document}
