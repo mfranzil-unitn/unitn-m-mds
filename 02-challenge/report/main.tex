@@ -1,0 +1,73 @@
+%\documentclass[10pt]{beamer}
+\documentclass[10pt,handout]{beamer}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{subfig}
+\usepackage{tikz}
+\usepackage{url}
+\usepackage{soul}
+
+
+\include{theme}
+\include{lst}
+
+\setbeamercovered{transparent}
+\setbeameroption{show notes}
+
+
+\AtBeginSection[]
+{
+	\begin{frame}
+		\frametitle{Summary}
+		\tableofcontents[currentsection]
+	\end{frame}
+}
+
+%\newcommand<>{\hover}[1]{\uncover#2{%
+% \begin{tikzpicture}[remember picture,overlay]%
+% \draw[fill,opacity=0.4] (current page.south west)
+%rectangle (current page.north east);
+% \node at (current page.center) {#1};
+% \end{tikzpicture}}
+%}
+
+% hey, it sounded cool when I wrote it
+\title{Capture the mark\\"Battle Report"}
+\titlegraphic{
+\includegraphics[width=3cm]{../drawable/marchio_unitrento_colore_en_250.jpg}
+}
+\author[Group nonsonoprompt]{%
+	\texorpdfstring{%
+		\begin{columns}
+			\column{.22\linewidth}
+			\centering
+			Paolo Chistè
+			\column{.27\linewidth}
+			\centering
+			Claudio Facchinetti
+			\column{.25\linewidth}
+			\centering
+			Matteo Franzil
+			\column{.23\linewidth}
+			\centering
+			Tommaso Fanelli
+		\end{columns}
+	}{Group nonsonoprompt}
+}
+\institute{University of Trento}
+
+
+\begin{document}
+% first page with the title
+\begin{frame}
+\maketitle
+\end{frame}
+% rest of the content. Slides may be moved into different files for ease of editing
+\include{slides}
+
+\end{document}
