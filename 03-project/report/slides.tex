@@ -70,7 +70,7 @@
         \item<1-> \textbf{821} photos shot by Andrea Montibeller~\cite{montibeller}: \begin{itemize}
             \item<2-> \textbf{20} clean images, for the fingerprint
             \item<3-> the others received radial correction with \textbf{Gimp}, \textbf{PTLens}, \textbf{Adobe Photoshop}, and \textbf{Adobe Lightroom}
-            \item<4-> a fifth batch contains photos corrected with a purposedly wrong camera profile
+            \item<4-> a fifth group contains photos corrected with a purposedly wrong camera profile
         \end{itemize}
     \end{itemize}
     
@@ -92,7 +92,7 @@
     \begin{itemize}
         \item<2-> filter the datasets to make them comparable;
         \item<3-> choose $N$ pictures for each camera model (27 + 1) to calculate a camera fingerprint;
-        \item<4-> for each camera model (Dresden) / batch (Outcamera) of the two datasets: \begin{itemize}
+        \item<4-> for each camera model (Dresden) / group (Outcamera) of the two datasets: \begin{itemize}
             \item choose $M$ pictures of the subset for the \texttt{H1} hypothesis;
             \item choose $M$ random pictures from other \textit{Dresden} pictures for \texttt{H0};
             \item calculate \textit{normalized cross-correlation} for each \texttt{H0/H1} picture and plot the results.
@@ -107,44 +107,32 @@
 
 \subsection{Preparation}
 
-\begin{frame}[fragile]{Data selection}
+\begin{frame}{Balancing the datasets}
 
-    For each of the two datasets:
-    \begin{itemize}
-        \item sort them
-        \item sort the amount of photos in each subfolder
-        \item define subsets for fingerprints and validation
-    \end{itemize}
-    
-    \medskip
-    
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.5\textwidth]{../drawable/diagram.png}
-    \end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[height=0.78\textheight]{../drawable/meme.png}
+\end{figure}
     
 \end{frame}
 
 \begin{frame}{Data selection (Outcamera)}
 
-    The dataset - with only Canon 1200D images - has:
+    The dataset - with only Canon 1200D images - has 
+    
     \begin{itemize}
-        \item \textbf{20} images for creating a camera fingerprint
+        \item \textbf{20} images for creating a camera fingerprint (as required) $\Rightarrow$ all fingerprints will require \textbf{20} images each. 
         \item \textbf{801} edited images \begin{itemize}
-            \item divided into equal batches of \textbf{160} pictures each
+            \item divided into groups of roughly \textbf{160} pictures each
         \end{itemize}
     \end{itemize}
     
     \medskip 
     
-    $\Rightarrow$ all fingerprints require \textbf{20} pictures. 
-    
-    \medskip
-    
     \onslide<2->{
-        For each batch (5 total):
+        For each group (5 total):
         \begin{itemize}
-            \item \textbf{160} \texttt{H1} pictures of the batch itself
+            \item \textbf{160} \texttt{H1} pictures of the group itself
             \item \textbf{160} \texttt{H0} pictures chosen at random from the Dresden database
         \end{itemize}
     }
@@ -152,28 +140,36 @@
 \end{frame}
 
 \begin{frame}[fragile]{Data selection (Dresden)}
-    In order to make Dresden uniform, we need to extract $x$ photos from each camera s.t. $27 x \le 801$\footnote{where 27 is the number of cameras in the Dresden dataset, and 801 is the total amount of photos remaining in the Outcamera dataset}.
-    
-    \medskip    
-    
-    $\Rightarrow$ all fingerprints use \textbf{20} pictures as before. 
+
+    Since our goal is to make an unbiased test, we will make this dataset uniform w.r.t. Outcamera and extract roughly \textbf{800} photos, obtaining a mini Dresden dataset.
     
     \medskip
     
     \onslide<2->{
+        To further make it uniform over camera models, we extract 30 photos from each camera\footnote{ $30 \approx \frac{801}{27}$, where 801 is the amount of photos in the Outcamera dataset, and 27 is the number of cameras in the Dresden dataset}.
+    }
+    
+    \medskip
+    
+    \onslide<3->{
         
-        For each model (27 total):
+        For each model:
         \begin{itemize}
-            \item \textbf{30} \texttt{H1} pictures ($ 30 \approx \frac{801}{27}$)
-            \item \textbf{30} \texttt{H0} pictures chosen from other models
+            \item \textbf{30} \texttt{H1} pictures
+            \item \textbf{30} \texttt{H0} pictures randomly chosen from other models
         \end{itemize}
-        
-        \medskip
-        
-        $\Rightarrow$ we get a mini Dresden dataset of $810$ pictures.
     
     }
 
+\end{frame}
+
+\begin{frame}[fragile]{Data selection}
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{../drawable/diagram.png}
+    \end{figure}
+    
 \end{frame}
 
 \subsection{Data extraction}
@@ -181,8 +177,8 @@
 \begin{frame}[fragile]{Camera fingerprints}
 
     \begin{enumerate}
-        \item verify image sizes with \texttt{verify-all-sizes.sh}
-        \item use a dedicated parallelized script for extracting each Noiseprint (both fingerprint and validation sets)
+        \item verify that all chosen images from the same camera have same size
+        \item use a parallel script for extracting each Noiseprint (for convenience, we extract \textbf{all} of them)
     \end{enumerate}
     
     \medskip
@@ -195,7 +191,7 @@ python3 noiseprint/main_extraction.py "$image"
     \medskip
     
     \onslide<2->{
-        $\Rightarrow$ once finished, we calculate each model's average (with a simple mean).
+        $\Rightarrow$ the fingerprint of each camera model is the average of its 20 image Noiseprints
     }
     
 \end{frame}
@@ -204,32 +200,19 @@ python3 noiseprint/main_extraction.py "$image"
 
 \begin{frame}{Cross-correlating images}
 
-    With the \texttt{.mat} files ready, another parallel script:
+    With the \texttt{.mat} files ready, for each fingerprint $FP$ another script: 
     
     \begin{itemize}
-        \item<2-> pulls the directory of each camera fingerprint
-        \item<3-> for each fingerprint: \begin{itemize}
-            \item enumerates the \texttt{H1} images available and randomizes $K$ more\footnote{30 for Dresden, 160 for Outcamera} for the \texttt{H0} case;
-            \item obtains a $1024 \times 1024$ central crop of each image;
-            \item runs automated tests for each \texttt{H1} and \texttt{H0} image against the current template;
-            \item dumps the results to a JSON;
-            \item saves the log files for later use.
-        \end{itemize}
+        \item<2-> selects the \texttt{H1} images available and randomly chooses $K$ images for the \texttt{H0} case\footnote{30 for Dresden, 160 for Outcamera};
+        \item<3-> obtains a $1024 \times 1024$ central crop of each image;
+        \item<4-> computes $ncc$ for each \texttt{H1} and \texttt{H0} image against $FP$;
+        \item<5-> dumps the results to a JSON for later analysis.
     \end{itemize}
     
 \end{frame}
 
-\begin{frame}{Example of output}
-
-    \begin{figure}
-        \centering
-        \includegraphics[width=\textwidth]{../drawable/examples/example-output.png}
-    \end{figure}
-    
-\end{frame}
-
 %\begin{frame}{Final steps}
-%    With the results readily available in JSON form, a final Python script computes a relevant visualization of data depending on the request (e.g. ROC curve, confusion matrix, table).
+%    With the results readily available in JSON format, a final Python script computes a relevant visualization of data depending on the request (e.g. ROC curve, confusion matrix, table).
 %\end{frame}
 
 \section{Results}
@@ -380,4 +363,11 @@ for d in *; do cd $d && ls | shuf | head -n 20
         \includegraphics[width=\textwidth]{../drawable/screenshot-verifysizes.png}
     \end{figure}
     
+\end{frame}
+
+\begin{frame}{Extra: example of JSON output}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{../drawable/examples/example-output.png}
+    \end{figure}
 \end{frame}
